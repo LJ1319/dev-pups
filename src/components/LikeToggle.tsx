@@ -1,14 +1,14 @@
-import { type Dispatch, type SetStateAction } from "react";
 import { Heart } from "lucide-react";
 import type { Puppy } from "../types";
+import { useLiked } from "../context";
 
 type ToggleLikeProps = {
   id: Puppy["id"];
-  liked: Puppy["id"][];
-  setLiked: Dispatch<SetStateAction<Puppy["id"][]>>;
 };
 
-export function LikeToggle({ id, liked, setLiked }: ToggleLikeProps) {
+export function LikeToggle({ id }: ToggleLikeProps) {
+  const { liked, setLiked } = useLiked();
+
   function handleClick() {
     if (liked.includes(id)) {
       setLiked(liked.filter((pupId) => pupId !== id));
