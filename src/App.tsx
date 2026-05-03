@@ -32,7 +32,7 @@ function App() {
         >
           <Suspense
             fallback={
-              <div className="mt-12 bg-white p-6 shadow ring ring-black/5">
+              <div className="mt-12 grid h-48 place-items-center">
                 <LoaderCircle className="animate-spin stroke-slate-300" />
               </div>
             }
