@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Suspense, use, useState } from "react";
 import { Container } from "./components/Container";
 import { Header } from "./components/Header";
 import { NewPuppyForm } from "./components/NewPuppyForm";
@@ -7,35 +7,62 @@ import { PuppiesList } from "./components/PuppiesList";
 import { Search } from "./components/Search";
 import { Shortlist } from "./components/ShortList";
 
-import { puppies as puppiesData } from "./data/puppies";
 import type { Puppy } from "./types";
-import { LikedContext } from "./context";
+import { LoaderCircle } from "lucide-react";
+import { getPuppies } from "./queries";
+import { ErrorBoundary } from "react-error-boundary";
 
 function App() {
   return (
     <PageWrapper>
       <Container>
         <Header />
-        <Main />
+        <ErrorBoundary
+          fallbackRender={({ error }) => {
+            const customError = error as { message: string; details?: string };
+
+            return (
+              <div className="mt-12 bg-red-100 p-6 shadow ring ring-black/5">
+                <p className="text-red-500">
+                  {customError.message}: {customError.details}
+                </p>
+              </div>
+            );
+          }}
+        >
+          <Suspense
+            fallback={
+              <div className="mt-12 bg-white p-6 shadow ring ring-black/5">
+                <LoaderCircle className="animate-spin stroke-slate-300" />
+              </div>
+            }
+          >
+            <Main />
+          </Suspense>
+        </ErrorBoundary>
       </Container>
     </PageWrapper>
   );
 }
 
+const puppyPromise = getPuppies();
+
 function Main() {
-  const [liked, setLiked] = useState<Puppy["id"][]>([]);
+  const apiPuppies = use(puppyPromise);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [puppies, setPuppies] = useState<Puppy[]>(puppiesData);
+  const [puppies, setPuppies] = useState<Puppy[]>(apiPuppies);
 
   return (
     <main>
-      <LikedContext value={{ liked, setLiked }}>
-        <div className="mt-24 grid gap-8 sm:grid-cols-2">
-          <Search searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-          <Shortlist puppies={puppies} />
-        </div>
-        <PuppiesList puppies={puppies} searchQuery={searchQuery} />
-      </LikedContext>
+      <div className="mt-24 grid gap-8 sm:grid-cols-2">
+        <Search searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        <Shortlist puppies={puppies} setPuppies={setPuppies} />
+      </div>
+      <PuppiesList
+        puppies={puppies}
+        searchQuery={searchQuery}
+        setPuppies={setPuppies}
+      />
       <NewPuppyForm puppies={puppies} setPuppies={setPuppies} />
     </main>
   );
